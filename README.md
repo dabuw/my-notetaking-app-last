@@ -35,21 +35,24 @@ The application is deployed and accessible at: **https://3dhkilc88dkk.manus.spac
 ## 📁 Project Structure
 
 ```
-notetaking-app/
+MyNoteTaking/
 ├── src/
 │   ├── models/
-│   │   ├── user.py          # User model (template)
+│   │   ├── user.py          # User model and database setup
 │   │   └── note.py          # Note model with database schema
 │   ├── routes/
 │   │   ├── user.py          # User API routes (template)
-│   │   └── note.py          # Note API endpoints
+│   │   ├── note.py          # Note CRUD API endpoints
+│   │   ├── translate.py     # Translation API endpoints
+│   │   └── generate.py      # AI note generation endpoints
 │   ├── static/
-│   │   ├── index.html       # Frontend application
-│   │   └── favicon.ico      # Application icon
-│   ├── database/
-│   │   └── app.db           # SQLite database file
+│   │   └── index.html       # Frontend application
+│   ├── call_llm_model.py    # LLM integration for note generation
+│   ├── llm.py              # LLM client configuration
 │   └── main.py              # Flask application entry point
-├── venv/                    # Python virtual environment
+├── database/
+│   └── app.db               # SQLite database file
+├── .venv/                   # Python virtual environment
 ├── requirements.txt         # Python dependencies
 └── README.md               # This file
 ```
@@ -63,29 +66,61 @@ notetaking-app/
 ### Installation Steps
 
 1. **Clone or download the project**
-   ```bash
-   python -m venv venv
+   Navigate to the project directory in PowerShell or Command Prompt.
+
+2. **Create virtual environment**
+   ```powershell
+   python -m venv .venv
    ```
 
-2. **Activate the virtual environment**
+3. **Activate the virtual environment**
+   
+   **Windows PowerShell:**
+   ```powershell
+   # If execution policy blocks the script, run this first:
+   Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
+   
+   # Then activate the environment:
+   .\.venv\Scripts\Activate.ps1
+   ```
+   
+   **Windows Command Prompt:**
+   ```cmd
+   .venv\Scripts\activate.bat
+   ```
+   
+   **Linux/macOS:**
    ```bash
-   source venv/bin/activate
+   source .venv/bin/activate
    ```
 
-   Remark: On Windows, use `venv\Scripts\activate`
-
-3. **Install dependencies**
-   ```bash
-   pip install -r requirements.txt
+4. **Install dependencies**
+   ```powershell
+   .venv\Scripts\python.exe -m pip install -r requirements.txt
    ```
 
-4. **Run the application**
-   ```bash
-   python src/main.py
+5. **Run the application**
+   ```powershell
+   .venv\Scripts\python.exe src\main.py
    ```
 
-5. **Access the application**
+6. **Access the application**
    - Open your browser and go to `http://localhost:5001`
+   - The application will be running on all network interfaces (0.0.0.0:5001)
+
+### Quick Start (Windows)
+If you already have the virtual environment set up, you can start the application directly:
+
+```powershell
+# Navigate to project directory
+cd D:\workspace\lab2\MyNoteTaking
+
+# Start the application (virtual environment will be used automatically)
+.venv\Scripts\python.exe src\main.py
+```
+
+### Stopping the Application
+Press `Ctrl+C` in the terminal where the application is running to stop the server.
 
 ## 📡 API Endpoints
 
@@ -103,6 +138,9 @@ notetaking-app/
   "id": 1,
   "title": "My Note Title",
   "content": "Note content here...",
+  "tags": ["work", "important"],
+  "event_date": "2025-10-12",
+  "event_time": "17:00",
   "created_at": "2025-09-03T11:26:38.123456",
   "updated_at": "2025-09-03T11:27:30.654321"
 }
@@ -185,6 +223,9 @@ CREATE TABLE note (
     id INTEGER PRIMARY KEY,
     title VARCHAR(200) NOT NULL,
     content TEXT NOT NULL,
+    tags TEXT,                    -- JSON array of tags
+    event_date DATE,             -- Optional event date
+    event_time TIME,             -- Optional event time
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
@@ -205,7 +246,7 @@ The application is configured for easy deployment with:
 - `SECRET_KEY`: Flask secret key for sessions
 
 ### Database Configuration
-- Database file: `src/database/app.db`
+- Database file: `database/app.db` (created in project root)
 - Automatic table creation on first run
 - SQLAlchemy ORM for database operations
 
