@@ -335,6 +335,14 @@
                 <input type="text" class="search-box" id="searchBox" placeholder="🔍 Search notes...">
                 <button class="new-note-btn" id="newNoteBtn">✨ New Note</button>
                 
+                <!-- Generate Notes Section -->
+                <div style="margin: 15px 0; padding: 10px; background: #f8f9ff; border-radius: 8px; border-left: 4px solid #4f46e5;">
+                    <h4 style="margin: 0 0 10px 0; color: #4f46e5; font-size: 14px;">🤖 Generate Notes</h4>
+                    <textarea id="naturalLanguageInput" placeholder="Describe what happened today, your thoughts, or any information you want to turn into a note..."
+                              style="width: 100%; min-height: 80px; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; font-family: inherit; resize: vertical; box-sizing: border-box;"></textarea>
+                    <button class="btn" id="generateNotesBtn" style="margin-top: 8px; width: 100%; font-size: 13px; padding: 8px;">🚀 Generate Notes</button>
+                </div>
+                
                 <div class="notes-list" id="notesList">
                     <div class="loading">Loading notes...</div>
                 </div>
@@ -417,6 +425,7 @@
                 document.getElementById('deleteBtn').addEventListener('click', () => this.deleteNote());
                 document.getElementById('translateBtn').addEventListener('click', () => this.translateCurrentNote());
                 document.getElementById('searchBox').addEventListener('input', (e) => this.searchNotes(e.target.value));
+                document.getElementById('generateNotesBtn').addEventListener('click', () => this.generateNotes());
                 
                 // Auto-save on content change (debounced)
                 let saveTimeout;
@@ -477,6 +486,11 @@
                 this.showEditor();
                 this.renderNotesList(); // Re-render to update active state
                 
+                // Clear translation area when switching notes
+                const translationArea = document.getElementById('translationArea');
+                translationArea.style.display = 'none';
+                translationArea.innerHTML = '';
+                
                 document.getElementById('noteTitle').value = note.title || '';
                 document.getElementById('noteContent').value = note.content || '';
                 document.getElementById('noteTags').value = (note.tags && note.tags.length) ? note.tags.join(',') : '';
@@ -498,6 +512,12 @@
                 };
                 
                 this.showEditor();
+                
+                // Clear translation area when creating new note
+                const translationArea = document.getElementById('translationArea');
+                translationArea.style.display = 'none';
+                translationArea.innerHTML = '';
+                
                 document.getElementById('noteTitle').value = '';
                 document.getElementById('noteContent').value = '';
                 document.getElementById('noteTags').value = '';
@@ -531,6 +551,12 @@
                 document.getElementById('editorForm').style.display = 'none';
                 document.getElementById('editorActions').style.display = 'none';
                 document.getElementById('editorTitle').textContent = 'Select a note to edit';
+                
+                // Clear translation area when hiding editor
+                const translationArea = document.getElementById('translationArea');
+                translationArea.style.display = 'none';
+                translationArea.innerHTML = '';
+                
                 this.currentNote = null;
             }
 
@@ -626,6 +652,112 @@
                     area.innerHTML = `<div class="success"><strong>Translation (${lang}):</strong><div style="margin-top:8px;">${this.escapeHtml(data.translation || '')}</div></div>`;
                 } catch (error) {
                     this.showMessage(`Translation error: ${error.message}`, 'error');
+                }
+            }
+
+            async generateNotes() {
+                const naturalLanguageInput = document.getElementById('naturalLanguageInput').value.trim();
+                const generateBtn = document.getElementById('generateNotesBtn');
+                
+                if (!naturalLanguageInput) {
+                    this.showMessage('Please enter some text to generate notes from', 'error');
+                    return;
+                }
+
+                // Disable button and show loading state
+                generateBtn.disabled = true;
+                generateBtn.textContent = '🔄 Generating...';
+                this.showMessage('Generating structured notes...', 'loading');
+
+                try {
+                    const response = await fetch('/api/generate-notes', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            user_input: naturalLanguageInput
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({}));
+                        throw new Error(errorData.error || `Server error: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+
+                    // Create a new note with the generated content
+                    this.createNewNote();
+
+                    // Populate the form with generated data
+                    document.getElementById('noteTitle').value = data.title || 'Generated Note';
+                    document.getElementById('noteContent').value = data.content || '';
+                    document.getElementById('noteTags').value = (data.tags && data.tags.length) ? data.tags.join(',') : '';
+
+                    // Populate date field robustly: accept 'YYYY-MM-DD', 'YYYY-MM-DDT..', or other ISO-like strings
+                    const rawDate = data.event_date || '';
+                    let normalizedDate = '';
+                    if (rawDate) {
+                        // Try to extract YYYY-MM-DD using regex
+                        const dateMatch = rawDate.match(/(\d{4}-\d{2}-\d{2})/);
+                        if (dateMatch) {
+                            normalizedDate = dateMatch[1];
+                        } else {
+                            // Fallback: try creating a Date and using toISOString (avoid timezone shift by using UTC parts)
+                            try {
+                                const dt = new Date(rawDate);
+                                if (!isNaN(dt.getTime())) {
+                                    // Build YYYY-MM-DD from local date components to match input[type=date] expectations
+                                    const y = dt.getFullYear();
+                                    const m = String(dt.getMonth() + 1).padStart(2, '0');
+                                    const d = String(dt.getDate()).padStart(2, '0');
+                                    normalizedDate = `${y}-${m}-${d}`;
+                                }
+                            } catch (e) {
+                                normalizedDate = '';
+                            }
+                        }
+                    }
+                    document.getElementById('noteEventDate').value = normalizedDate || '';
+
+                    // Populate time field robustly: accept 'HH:MM', 'HH:MM:SS', 'HH:MM:SSZ', or '17:00:00'
+                    const rawTime = data.event_time || '';
+                    let normalizedTime = '';
+                    if (rawTime) {
+                        // Try to find HH:MM using regex
+                        const timeMatch = rawTime.match(/(\d{1,2}:\d{2})/);
+                        if (timeMatch) {
+                            // Ensure two-digit hour
+                            const parts = timeMatch[1].split(':');
+                            const hh = String(parseInt(parts[0], 10)).padStart(2, '0');
+                            const mm = String(parseInt(parts[1], 10)).padStart(2, '0');
+                            normalizedTime = `${hh}:${mm}`;
+                        } else {
+                            // Try to parse times like '5pm' or '5 PM'
+                            const pmMatch = rawTime.match(/(\d{1,2})\s*(am|pm)/i);
+                            if (pmMatch) {
+                                let hour = parseInt(pmMatch[1], 10);
+                                const ampm = pmMatch[2].toLowerCase();
+                                if (ampm === 'pm' && hour < 12) hour += 12;
+                                if (ampm === 'am' && hour === 12) hour = 0;
+                                normalizedTime = `${String(hour).padStart(2, '0')}:00`;
+                            }
+                        }
+                    }
+                    document.getElementById('noteEventTime').value = normalizedTime || '';
+
+                    // Clear the natural language input
+                    document.getElementById('naturalLanguageInput').value = '';
+
+                    this.showMessage('Notes generated successfully! You can now edit and save them.', 'success');
+                    
+                } catch (error) {
+                    this.showMessage(`Error generating notes: ${error.message}`, 'error');
+                } finally {
+                    // Re-enable button
+                    generateBtn.disabled = false;
+                    generateBtn.textContent = '🚀 Generate Notes';
                 }
             }
 

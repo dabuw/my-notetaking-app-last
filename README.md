@@ -108,6 +108,53 @@ notetaking-app/
 }
 ```
 
+## 🧠 Generate Notes (AI)
+
+The app includes a simple AI-assisted "Generate Notes" feature that converts natural-language input into a structured note. It extracts a concise title, full note content, optional tags, and — importantly — event date and time when present (normalized to `YYYY-MM-DD` and `HH:MM`).
+
+Where to find it in the UI:
+- In the left sidebar under "Generate Notes", enter free-form text such as "今天下午5点去野餐" and click the "Generate Notes" button. A new note will be created with the parsed title, content, tags, event date and event time populated in the editor.
+
+API endpoint:
+
+- `POST /api/generate-notes`
+
+Request JSON (example):
+
+```json
+{
+   "user_input": "今天下午5点去野餐",
+   "language": "Chinese"
+}
+```
+
+Response JSON (example):
+
+```json
+{
+   "title": "今天野餐",
+   "content": "今天下午5点去野餐。",
+   "tags": ["野餐", "户外活动"],
+   "event_date": "2025-10-12",
+   "event_time": "17:00"
+}
+```
+
+Notes about parsing:
+- The backend uses `src.call_llm_model.process_user_notes` which attempts to extract structured fields using an LLM and falls back to deterministic date/time parsing for many common Chinese/English expressions (e.g. 今天/明天/下午5点/5pm).
+- The frontend does additional normalization so the values are compatible with `input[type=date]` (`YYYY-MM-DD`) and `input[type=time]` (`HH:MM`).
+
+Quick PowerShell tests (run from project root):
+
+```powershell
+# 1) Directly call the LLM parsing function (no server required)
+.venv\Scripts\python.exe -c "import sys,json; sys.path.append('src'); from call_llm_model import process_user_notes; print(json.dumps(process_user_notes('Chinese','今天下午5点去野餐'), indent=2, ensure_ascii=False))"
+
+# 2) Call the API using Flask test client (no server required)
+.venv\Scripts\python.exe -c "import sys,json; sys.path.append('src'); from main import app; c=app.test_client(); r=c.post('/api/generate-notes', json={'user_input':'今天下午5点去野餐','language':'Chinese'}); print(r.status_code); print(json.dumps(r.get_json(), ensure_ascii=False, indent=2))"
+```
+
+
 ## 🎨 User Interface Features
 
 ### Sidebar
