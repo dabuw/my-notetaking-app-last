@@ -343,13 +343,24 @@
             <div class="note-editor">
                 <div class="editor-header">
                     <h2 class="editor-title" id="editorTitle">Select a note to edit</h2>
-                    <div class="editor-actions" id="editorActions" style="display: none;">
-                        <button class="btn btn-save" id="saveBtn">💾 Save</button>
-                        <button class="btn btn-delete" id="deleteBtn">🗑️ Delete</button>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <select id="translateLang" class="form-input" style="width:140px; padding:6px;">
+                            <option value="zh-CN">Chinese (简体)</option>
+                            <option value="zh-TW">Chinese (繁體)</option>
+                            <option value="ja-JP">Japanese</option>
+                            <option value="es-ES">Spanish</option>
+                            <option value="en-US">English</option>
+                        </select>
+                        <button class="btn" id="translateBtn">🌐 Translate</button>
+                        <div class="editor-actions" id="editorActions" style="display: none;">
+                            <button class="btn btn-save" id="saveBtn">💾 Save</button>
+                            <button class="btn btn-delete" id="deleteBtn">🗑️ Delete</button>
+                        </div>
                     </div>
                 </div>
 
                 <div id="messageArea"></div>
+                <div id="translationArea" style="margin:10px 0; display:none;"></div>
 
                 <div id="editorForm" style="display: none;">
                     <div class="form-group">
@@ -404,6 +415,7 @@
                 document.getElementById('newNoteBtn').addEventListener('click', () => this.createNewNote());
                 document.getElementById('saveBtn').addEventListener('click', () => this.saveNote());
                 document.getElementById('deleteBtn').addEventListener('click', () => this.deleteNote());
+                document.getElementById('translateBtn').addEventListener('click', () => this.translateCurrentNote());
                 document.getElementById('searchBox').addEventListener('input', (e) => this.searchNotes(e.target.value));
                 
                 // Auto-save on content change (debounced)
@@ -582,6 +594,38 @@
                     }
                 } catch (error) {
                     this.showMessage(`Error saving note: ${error.message}`, 'error');
+                }
+            }
+
+            async translateCurrentNote() {
+                const title = document.getElementById('noteTitle').value.trim();
+                const content = document.getElementById('noteContent').value.trim();
+                const lang = document.getElementById('translateLang').value || 'zh-CN';
+
+                const text = title ? `${title}\n\n${content}` : content;
+                if (!text) {
+                    this.showMessage('Please enter text to translate', 'error');
+                    return;
+                }
+
+                try {
+                    const resp = await fetch('/api/translate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ text, lang })
+                    });
+
+                    if (!resp.ok) {
+                        const err = await resp.json().catch(() => ({}));
+                        throw new Error(err.error || 'Translate API failed');
+                    }
+
+                    const data = await resp.json();
+                    const area = document.getElementById('translationArea');
+                    area.style.display = 'block';
+                    area.innerHTML = `<div class="success"><strong>Translation (${lang}):</strong><div style="margin-top:8px;">${this.escapeHtml(data.translation || '')}</div></div>`;
+                } catch (error) {
+                    this.showMessage(`Translation error: ${error.message}`, 'error');
                 }
             }
 
