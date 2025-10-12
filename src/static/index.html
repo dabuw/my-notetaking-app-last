@@ -361,6 +361,21 @@
                         <label class="form-label" for="noteContent">Content</label>
                         <textarea class="form-textarea" id="noteContent" placeholder="Start writing your note..."></textarea>
                     </div>
+                    <div class="form-group">
+                        <label class="form-label" for="noteTags">Tags (comma separated)</label>
+                        <input type="text" class="form-input" id="noteTags" placeholder="e.g. work,ideas,personal">
+                    </div>
+
+                    <div class="form-group" style="display:flex; gap:10px;">
+                        <div style="flex:1;">
+                            <label class="form-label" for="noteEventDate">Event Date</label>
+                            <input type="date" class="form-input" id="noteEventDate">
+                        </div>
+                        <div style="width:160px;">
+                            <label class="form-label" for="noteEventTime">Event Time</label>
+                            <input type="time" class="form-input" id="noteEventTime">
+                        </div>
+                    </div>
                 </div>
 
                 <div class="empty-state" id="emptyState">
@@ -437,7 +452,7 @@
                          data-note-id="${note.id}" onclick="noteTaker.selectNote(${note.id})">
                         <div class="note-title">${this.escapeHtml(note.title || 'Untitled')}</div>
                         <div class="note-preview">${this.escapeHtml(note.content || 'No content')}</div>
-                        <div class="note-date">${this.formatDate(note.updated_at)}</div>
+                        <div class="note-date">${this.formatDate(note.updated_at)} ${note.event_date ? '· ' + note.event_date : ''} ${note.event_time ? note.event_time : ''}</div>
                     </div>
                 `).join('');
             }
@@ -452,6 +467,9 @@
                 
                 document.getElementById('noteTitle').value = note.title || '';
                 document.getElementById('noteContent').value = note.content || '';
+                document.getElementById('noteTags').value = (note.tags && note.tags.length) ? note.tags.join(',') : '';
+                document.getElementById('noteEventDate').value = note.event_date || '';
+                document.getElementById('noteEventTime').value = note.event_time || '';
                 document.getElementById('editorTitle').textContent = note.title || 'Untitled Note';
             }
 
@@ -460,6 +478,9 @@
                     id: null,
                     title: '',
                     content: '',
+                    tags: [],
+                    event_date: null,
+                    event_time: null,
                     created_at: new Date().toISOString(),
                     updated_at: new Date().toISOString()
                 };
@@ -467,6 +488,9 @@
                 this.showEditor();
                 document.getElementById('noteTitle').value = '';
                 document.getElementById('noteContent').value = '';
+                document.getElementById('noteTags').value = '';
+                document.getElementById('noteEventDate').value = '';
+                document.getElementById('noteEventTime').value = '';
                 document.getElementById('editorTitle').textContent = 'New Note';
                 document.getElementById('noteTitle').focus();
                 
@@ -480,6 +504,14 @@
                 document.getElementById('emptyState').style.display = 'none';
                 document.getElementById('editorForm').style.display = 'block';
                 document.getElementById('editorActions').style.display = 'flex';
+
+                // 修复：新建笔记时隐藏删除按钮
+                const deleteBtn = document.getElementById('deleteBtn');
+                if (this.currentNote && this.currentNote.id) {
+                    deleteBtn.style.display = 'inline-block';
+                } else {
+                    deleteBtn.style.display = 'none';
+                }
             }
 
             hideEditor() {
@@ -506,7 +538,10 @@
                 try {
                     const noteData = {
                         title: title || 'Untitled',
-                        content: content
+                        content: content,
+                        tags: document.getElementById('noteTags').value ? document.getElementById('noteTags').value.split(',').map(t => t.trim()).filter(Boolean) : [],
+                        event_date: document.getElementById('noteEventDate').value || null,
+                        event_time: document.getElementById('noteEventTime').value || null
                     };
 
                     let response;

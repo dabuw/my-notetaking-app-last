@@ -1,4 +1,5 @@
 from flask import Blueprint, jsonify, request
+from datetime import datetime, time
 from src.models.note import Note, db
 
 note_bp = Blueprint('note', __name__)
@@ -16,8 +17,31 @@ def create_note():
         data = request.json
         if not data or 'title' not in data or 'content' not in data:
             return jsonify({'error': 'Title and content are required'}), 400
-        
+        # optional fields: tags (list or comma string), event_date (YYYY-MM-DD), event_time (HH:MM[:SS])
+        tags = data.get('tags')
+        event_date = data.get('event_date')
+        event_time = data.get('event_time')
+
         note = Note(title=data['title'], content=data['content'])
+        note.set_tags(tags)
+        if event_date:
+            try:
+                note.event_date = datetime.fromisoformat(event_date).date()
+            except Exception:
+                # ignore invalid date formats
+                note.event_date = None
+        if event_time:
+            try:
+                note.event_time = datetime.fromisoformat(event_time).time()
+            except Exception:
+                try:
+                    # fallback parse HH:MM[:SS]
+                    parts = event_time.split(':')
+                    h, m = int(parts[0]), int(parts[1])
+                    s = int(parts[2]) if len(parts) > 2 else 0
+                    note.event_time = time(hour=h, minute=m, second=s)
+                except Exception:
+                    note.event_time = None
         db.session.add(note)
         db.session.commit()
         return jsonify(note.to_dict()), 201
@@ -43,6 +67,33 @@ def update_note(note_id):
         
         note.title = data.get('title', note.title)
         note.content = data.get('content', note.content)
+        # optional updates
+        if 'tags' in data:
+            note.set_tags(data.get('tags'))
+        if 'event_date' in data:
+            ed = data.get('event_date')
+            if ed:
+                try:
+                    note.event_date = datetime.fromisoformat(ed).date()
+                except Exception:
+                    note.event_date = None
+            else:
+                note.event_date = None
+        if 'event_time' in data:
+            et = data.get('event_time')
+            if et:
+                try:
+                    note.event_time = datetime.fromisoformat(et).time()
+                except Exception:
+                    try:
+                        parts = et.split(':')
+                        h, m = int(parts[0]), int(parts[1])
+                        s = int(parts[2]) if len(parts) > 2 else 0
+                        note.event_time = time(hour=h, minute=m, second=s)
+                    except Exception:
+                        note.event_time = None
+            else:
+                note.event_time = None
         db.session.commit()
         return jsonify(note.to_dict())
     except Exception as e:
