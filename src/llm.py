@@ -58,8 +58,11 @@ def call_llm_model(model: str, messages: List[Dict[str, Any]], temperature: floa
         "top_p": top_p,
     }
 
+    # Use shorter timeout for Vercel serverless environment
+    timeout = 15 if os.environ.get('VERCEL') else 30
+    
     try:
-        resp = requests.post(ENDPOINT, headers=headers, json=payload, timeout=30)
+        resp = requests.post(ENDPOINT, headers=headers, json=payload, timeout=timeout)
     except Exception as e:
         raise RuntimeError(f"Failed to contact LLM endpoint {ENDPOINT}: {e}")
 
