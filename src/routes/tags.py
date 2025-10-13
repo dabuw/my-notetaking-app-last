@@ -72,16 +72,22 @@ def get_tags_statistics():
 def search_notes_by_tag(tag_name):
     """根据标签搜索相关笔记"""
     try:
+        # 导入URL解码工具
+        from urllib.parse import unquote
+        
+        # 解码URL中的中文字符
+        decoded_tag_name = unquote(tag_name)
+        
         notes = Note.query.all()
         matching_notes = []
         
         for note in notes:
             tags = note.get_tags()
-            if tags and tag_name.lower() in [t.lower() for t in tags]:
+            if tags and decoded_tag_name.lower() in [t.lower() for t in tags]:
                 matching_notes.append(note.to_dict())
         
         return jsonify({
-            'tag': tag_name,
+            'tag': decoded_tag_name,  # 返回解码后的标签名
             'count': len(matching_notes),
             'notes': matching_notes
         })
