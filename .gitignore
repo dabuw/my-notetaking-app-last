@@ -110,3 +110,15 @@ Thumbs.db
 .coverage
 coverage.xml
 *.prof
+
+# Test files (development only)
+test_*.py
+*_test.py
+quick_*.py
+verify_*.py
+diagnose_*.py
+
+# Temporary development files
+flask_key.py
+*.tmp
+*.bak
