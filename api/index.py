@@ -64,6 +64,18 @@ try:
     def health_check():
         return {'status': 'healthy', 'message': 'Vercel deployment is working'}
     
+    # Debug endpoint to check routes
+    @app.route('/api/debug/routes')
+    def debug_routes():
+        routes = []
+        for rule in app.url_map.iter_rules():
+            routes.append({
+                'endpoint': rule.endpoint,
+                'methods': list(rule.methods),
+                'rule': rule.rule
+            })
+        return {'routes': routes, 'blueprints': list(app.blueprints.keys())}
+    
     # Serve static files
     @app.route('/', defaults={'path': ''})
     @app.route('/<path:path>')
