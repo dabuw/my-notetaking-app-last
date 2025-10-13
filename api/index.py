@@ -20,6 +20,7 @@ try:
     from src.routes.note import note_bp
     from src.routes.translate import translate_bp
     from src.routes.generate import generate_bp
+    from src.routes.tags import tags_bp
     from src.models.note import Note
     
     # Create Flask app instance
@@ -52,6 +53,7 @@ try:
     app.register_blueprint(note_bp, url_prefix='/api')
     app.register_blueprint(translate_bp, url_prefix='/api')
     app.register_blueprint(generate_bp, url_prefix='/api')
+    app.register_blueprint(tags_bp)
     
     # Create tables
     with app.app_context():

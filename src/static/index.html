@@ -321,6 +321,65 @@
         .notes-list::-webkit-scrollbar-thumb:hover {
             background: #5a6fd8;
         }
+
+        /* Tag Cloud Styles */
+        .tag-cloud {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 8px 0;
+            min-height: 40px;
+            align-items: flex-start;
+            align-content: flex-start;
+        }
+
+        .tag-item {
+            display: inline-block;
+            padding: 4px 8px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+            text-decoration: none;
+            line-height: 1.2;
+        }
+
+        .tag-item:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a5494 100%);
+        }
+
+        .tag-item.active {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            box-shadow: 0 2px 8px rgba(40, 167, 69, 0.4);
+            transform: scale(1.05);
+        }
+
+        .tag-item.size-xs { font-size: 10px; opacity: 0.7; }
+        .tag-item.size-sm { font-size: 11px; opacity: 0.8; }
+        .tag-item.size-md { font-size: 12px; opacity: 0.9; }
+        .tag-item.size-lg { font-size: 13px; opacity: 1.0; font-weight: 600; }
+        .tag-item.size-xl { font-size: 14px; opacity: 1.0; font-weight: 700; }
+
+        .tag-stats {
+            padding-top: 8px;
+            border-top: 1px solid #e1e5e9;
+            font-size: 11px;
+            color: #666;
+        }
+
+        .tag-empty {
+            text-align: center;
+            padding: 20px 10px;
+            color: #999;
+            font-size: 12px;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
@@ -335,6 +394,17 @@
                 <input type="text" class="search-box" id="searchBox" placeholder="🔍 Search notes...">
                 <button class="new-note-btn" id="newNoteBtn">✨ New Note</button>
                 
+                <!-- Tag Cloud Section -->
+                <div style="margin: 15px 0; padding: 10px; background: #fff8dc; border-radius: 8px; border-left: 4px solid #ffa500;">
+                    <h4 style="margin: 0 0 10px 0; color: #ff8c00; font-size: 14px;">🏷️ Tag Cloud</h4>
+                    <div id="tagCloud" class="tag-cloud">
+                        <div class="loading" style="text-align: center; padding: 10px; font-size: 12px; color: #999;">Loading tags...</div>
+                    </div>
+                    <div id="tagStats" class="tag-stats" style="margin-top: 8px; font-size: 11px; color: #666; display: none;">
+                        <span id="tagStatsText"></span>
+                    </div>
+                </div>
+
                 <!-- Generate Notes Section -->
                 <div style="margin: 15px 0; padding: 10px; background: #f8f9ff; border-radius: 8px; border-left: 4px solid #4f46e5;">
                     <h4 style="margin: 0 0 10px 0; color: #4f46e5; font-size: 14px;">🤖 Generate Notes</h4>
@@ -411,12 +481,15 @@
                 this.notes = [];
                 this.currentNote = null;
                 this.isLoading = false;
+                this.tagStats = null;
+                this.activeTag = null;  // 跟踪当前活动的标签
                 this.init();
             }
 
             async init() {
                 this.bindEvents();
                 await this.loadNotes();
+                await this.loadTagCloud();
             }
 
             bindEvents() {
@@ -481,6 +554,12 @@
             async selectNote(noteId) {
                 const note = this.notes.find(n => n.id === noteId);
                 if (!note) return;
+
+                // Clear any active tag filter when selecting a note
+                if (this.activeTag) {
+                    this.activeTag = null;
+                    this.renderTagCloud();
+                }
 
                 this.currentNote = note;
                 this.showEditor();
@@ -552,10 +631,20 @@
                 document.getElementById('editorActions').style.display = 'none';
                 document.getElementById('editorTitle').textContent = 'Select a note to edit';
                 
+                // Clear all form fields to avoid confusion
+                document.getElementById('noteTitle').value = '';
+                document.getElementById('noteContent').value = '';
+                document.getElementById('noteTags').value = '';
+                document.getElementById('noteEventDate').value = '';
+                document.getElementById('noteEventTime').value = '';
+                
                 // Clear translation area when hiding editor
                 const translationArea = document.getElementById('translationArea');
                 translationArea.style.display = 'none';
                 translationArea.innerHTML = '';
+                
+                // Clear current note reference
+                this.currentNote = null;
                 
                 this.currentNote = null;
             }
@@ -614,6 +703,9 @@
                     
                     this.renderNotesList();
                     document.getElementById('editorTitle').textContent = savedNote.title;
+                    
+                    // Refresh tag cloud after saving (tags might have changed)
+                    await this.loadTagCloud();
                     
                     if (!isAutoSave) {
                         this.showMessage('Note saved successfully!', 'success');
@@ -777,10 +869,153 @@
                     this.notes = this.notes.filter(n => n.id !== this.currentNote.id);
                     this.renderNotesList();
                     this.hideEditor();
+                    
+                    // Refresh tag cloud after deletion
+                    await this.loadTagCloud();
+                    
                     this.showMessage('Note deleted successfully!', 'success');
                 } catch (error) {
                     this.showMessage(`Error deleting note: ${error.message}`, 'error');
                 }
+            }
+
+            async loadTagCloud() {
+                try {
+                    const response = await fetch('/api/tags/statistics');
+                    if (!response.ok) throw new Error('Failed to load tag statistics');
+                    
+                    this.tagStats = await response.json();
+                    this.renderTagCloud();
+                } catch (error) {
+                    console.error('Error loading tag cloud:', error);
+                    this.renderEmptyTagCloud('Failed to load tags');
+                }
+            }
+
+            renderTagCloud() {
+                const tagCloudDiv = document.getElementById('tagCloud');
+                const tagStatsDiv = document.getElementById('tagStats');
+                const tagStatsText = document.getElementById('tagStatsText');
+
+                if (!this.tagStats || !this.tagStats.tag_counts || this.tagStats.tag_counts.length === 0) {
+                    this.renderEmptyTagCloud('No tags found. Create some notes with tags to see them here!');
+                    return;
+                }
+
+                // Render tag items
+                const tagItems = this.tagStats.tag_counts.map(tagData => {
+                    const sizeClass = this.getTagSizeClass(tagData.weight);
+                    const isActive = this.activeTag === tagData.tag;
+                    const activeClass = isActive ? 'active' : '';
+                    return `<span class="tag-item ${sizeClass} ${activeClass}" 
+                                  data-tag="${this.escapeHtml(tagData.tag)}" 
+                                  data-count="${tagData.count}"
+                                  onclick="noteTaker.filterByTag('${this.escapeHtml(tagData.tag)}')"
+                                  title="${this.escapeHtml(tagData.tag)}: ${tagData.count} notes (${tagData.percentage}%)">
+                                ${this.escapeHtml(tagData.tag)} (${tagData.count})
+                            </span>`;
+                }).join('');
+
+                tagCloudDiv.innerHTML = tagItems;
+
+                // Show statistics
+                tagStatsDiv.style.display = 'block';
+                tagStatsText.textContent = `${this.tagStats.unique_tags} unique tags, ${this.tagStats.total_tags} total uses`;
+            }
+
+            renderEmptyTagCloud(message) {
+                const tagCloudDiv = document.getElementById('tagCloud');
+                const tagStatsDiv = document.getElementById('tagStats');
+                
+                tagCloudDiv.innerHTML = `<div class="tag-empty">${message}</div>`;
+                tagStatsDiv.style.display = 'none';
+            }
+
+            getTagSizeClass(weight) {
+                if (weight >= 0.8) return 'size-xl';
+                if (weight >= 0.6) return 'size-lg';
+                if (weight >= 0.4) return 'size-md';
+                if (weight >= 0.2) return 'size-sm';
+                return 'size-xs';
+            }
+
+            async filterByTag(tagName) {
+                try {
+                    this.showMessage(`Searching for notes with tag: ${tagName}`, 'loading');
+                    
+                    const response = await fetch(`/api/tags/search/${encodeURIComponent(tagName)}`);
+                    if (!response.ok) throw new Error('Failed to search notes by tag');
+                    
+                    const result = await response.json();
+                    
+                    if (result.notes.length === 0) {
+                        this.showMessage(`No notes found with tag "${tagName}"`, 'error');
+                        return;
+                    }
+
+                    // Set active tag and refresh tag cloud display
+                    this.activeTag = tagName;
+                    this.renderTagCloud();
+
+                    // Clear current editor and hide it to avoid confusion
+                    this.hideEditor();
+
+                    // Update notes list with filtered results
+                    const notesList = document.getElementById('notesList');
+                    
+                    // Add filter indicator header
+                    let filterHeader = `
+                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                                   color: white; padding: 10px; border-radius: 8px; margin-bottom: 15px; 
+                                   text-align: center; font-size: 13px; font-weight: 600;">
+                            🏷️ Filtered by tag: "${this.escapeHtml(tagName)}" (${result.count} notes)
+                            <button onclick="noteTaker.showAllNotes()" 
+                                    style="background: rgba(255,255,255,0.2); border: none; color: white; 
+                                           padding: 4px 8px; border-radius: 4px; margin-left: 10px; 
+                                           font-size: 11px; cursor: pointer;">
+                                ✕ Clear Filter
+                            </button>
+                        </div>
+                    `;
+
+                    notesList.innerHTML = filterHeader + result.notes.map(note => `
+                        <div class="note-item" 
+                             data-note-id="${note.id}" 
+                             onclick="noteTaker.selectNote(${note.id})">
+                            <div class="note-title">${this.escapeHtml(note.title || 'Untitled')}</div>
+                            <div class="note-preview">${this.escapeHtml(note.content || 'No content')}</div>
+                            <div class="note-date">${this.formatDate(note.updated_at)}</div>
+                        </div>
+                    `).join('');
+
+                    // Update editor title to show filter status
+                    document.getElementById('editorTitle').textContent = `📋 Filtered by "${tagName}" - Select a note to edit`;
+
+                    this.showMessage(`Found ${result.count} notes with tag "${tagName}"`, 'success');
+                } catch (error) {
+                    this.showMessage(`Error filtering by tag: ${error.message}`, 'error');
+                }
+            }
+
+            showAllNotes() {
+                // Clear active tag and refresh tag cloud
+                this.activeTag = null;
+                this.renderTagCloud();
+                
+                // Clear any filters and show all notes
+                this.renderNotesList();
+                this.hideMessage();
+                
+                // Reset editor title
+                document.getElementById('editorTitle').textContent = 'Select a note to edit';
+                
+                // If no note is currently selected, hide editor
+                if (!this.currentNote) {
+                    this.hideEditor();
+                }
+                
+                // Clear search box if it has content
+                document.getElementById('searchBox').value = '';
             }
 
             searchNotes(query) {
