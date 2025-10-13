@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from datetime import datetime, time
+from datetime import datetime, time, date
 from src.models.note import Note, db
 
 note_bp = Blueprint('note', __name__)
@@ -26,9 +26,9 @@ def create_note():
         note.set_tags(tags)
         if event_date:
             try:
-                note.event_date = datetime.fromisoformat(event_date).date()
+                # Accept plain YYYY-MM-DD
+                note.event_date = date.fromisoformat(event_date)
             except Exception:
-                # ignore invalid date formats
                 note.event_date = None
         if event_time:
             try:
@@ -74,7 +74,7 @@ def update_note(note_id):
             ed = data.get('event_date')
             if ed:
                 try:
-                    note.event_date = datetime.fromisoformat(ed).date()
+                    note.event_date = date.fromisoformat(ed)
                 except Exception:
                     note.event_date = None
             else:

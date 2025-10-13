@@ -22,10 +22,17 @@ class Note(db.Model):
         if not self.tags:
             return []
         try:
+            # 如果已经是列表，直接返回
+            if isinstance(self.tags, list):
+                return self.tags
+            # 如果是字符串，尝试解析JSON
             return json.loads(self.tags)
         except Exception:
             # fallback: comma separated string
-            return [t.strip() for t in (self.tags or '').split(',') if t.strip()]
+            if isinstance(self.tags, str):
+                return [t.strip() for t in self.tags.split(',') if t.strip()]
+            else:
+                return []
 
     def set_tags(self, tags_list):
         try:
