@@ -12,7 +12,7 @@ A modern, responsive web application for managing personal notes with a beautifu
 - **自动保存**: 输入时自动保存笔记内容
 
 ### 🤖 AI 增强功能
-- **智能笔记生成**: 将自然语言输入转换为结构化笔记
+- **智能笔记生成**: 通过 GitHub Models API 将自然语言输入转换为结构化笔记
 - **日期时间解析**: 自动识别和解析"今天下午5点"等时间表达
 - **标签自动提取**: AI 自动为笔记生成相关标签
 - **多语言翻译**: 支持笔记内容的多语言翻译
@@ -47,9 +47,8 @@ The application is deployed and accessible at: **https://3dhkilc88dkk.manus.spac
 - **PostgreSQL**: 生产环境数据库 (Neon/Vercel)
 
 ### AI & 集成服务
-- **智谱 AI (GLM-4)**: 自然语言处理和笔记生成
-- **GitHub Models**: 备用 AI 服务
-- **OpenAI API**: 兼容接口
+- **GitHub Models**: 主要 AI 服务，支持 GPT-4o-mini 等模型进行自然语言处理和笔记生成
+- **OpenAI API**: 备用 AI 服务（可选配置）
 
 ### 部署平台
 - **Vercel**: 无服务器部署平台
@@ -95,6 +94,8 @@ MyNoteTaking/
 - Python 3.11+
 - pip (Python package manager)
 
+**注意：** 此项目依赖多个第三方库（Flask、SQLAlchemy、OpenAI SDK 等），强烈建议使用虚拟环境来隔离依赖，避免与系统 Python 或其他项目冲突。
+
 ### Installation Steps
 
 1. **Clone or download the project**
@@ -138,12 +139,17 @@ MyNoteTaking/
    .venv\Scripts\python.exe -m pip install -r requirements.txt
    ```
 
-5. **设置环境变量** (可选)
-   复制 `.env.example` 为 `.env` 并根据需要配置：
+5. **设置环境变量** (AI 功能必需)
+   复制 `.env.example` 为 `.env` 并配置 GitHub Token：
    ```powershell
    copy .env.example .env
    ```
-   如需使用 AI 功能，请在 `.env` 文件中配置相应的 API 密钥。
+   **重要：** 如需使用 AI 笔记生成功能，必须在 `.env` 文件中配置 `GITHUB_TOKEN`。
+   
+   获取 GitHub Token 步骤：
+   1. 访问 [GitHub Settings → Developer settings → Personal access tokens](https://github.com/settings/tokens)
+   2. 生成新的 token，勾选必要的权限
+   3. 复制 token 并在 `.env` 文件中设置 `GITHUB_TOKEN=你的token`
 
 6. **Run the application**
    ```powershell
