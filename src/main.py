@@ -24,7 +24,7 @@ app.register_blueprint(user_bp, url_prefix='/api')
 app.register_blueprint(note_bp, url_prefix='/api')
 app.register_blueprint(translate_bp, url_prefix='/api')
 app.register_blueprint(generate_bp, url_prefix='/api')
-app.register_blueprint(tags_bp)
+app.register_blueprint(tags_bp, url_prefix='/api')
 # Configure database: prefer DATABASE_URL (e.g. Neon Postgres), fallback to local SQLite
 database_url = os.environ.get('DATABASE_URL')
 if database_url:

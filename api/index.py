@@ -53,7 +53,7 @@ try:
     app.register_blueprint(note_bp, url_prefix='/api')
     app.register_blueprint(translate_bp, url_prefix='/api')
     app.register_blueprint(generate_bp, url_prefix='/api')
-    app.register_blueprint(tags_bp)
+    app.register_blueprint(tags_bp, url_prefix='/api')
     
     # Create tables
     with app.app_context():

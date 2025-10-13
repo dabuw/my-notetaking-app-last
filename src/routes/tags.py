@@ -5,7 +5,7 @@ import json
 
 tags_bp = Blueprint('tags', __name__)
 
-@tags_bp.route('/api/tags/statistics', methods=['GET'])
+@tags_bp.route('/tags/statistics', methods=['GET'])
 def get_tags_statistics():
     """获取所有笔记中标签的使用统计信息"""
     try:
@@ -64,7 +64,7 @@ def get_tags_statistics():
     except Exception as e:
         return jsonify({'error': f'Failed to get tag statistics: {str(e)}'}), 500
 
-@tags_bp.route('/api/tags/search/<tag_name>', methods=['GET'])
+@tags_bp.route('/tags/search/<tag_name>', methods=['GET'])
 def search_notes_by_tag(tag_name):
     """根据标签搜索相关笔记"""
     try:
