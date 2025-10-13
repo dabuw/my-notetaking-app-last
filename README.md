@@ -4,14 +4,25 @@ A modern, responsive web application for managing personal notes with a beautifu
 
 ## 🌟 Features
 
-- **Create Notes**: Add new notes with titles and rich content
-- **Edit Notes**: Update existing notes with real-time editing
-- **Delete Notes**: Remove notes you no longer need
-- **Search Notes**: Find notes quickly by searching titles and content
-- **Auto-save**: Notes are automatically saved as you type
-- **Responsive Design**: Works perfectly on desktop and mobile devices
-- **Modern UI**: Beautiful gradient design with smooth animations
-- **Real-time Updates**: Instant feedback and updates
+### 📝 核心功能
+- **创建笔记**: 添加带标题和丰富内容的新笔记
+- **编辑笔记**: 实时编辑现有笔记内容
+- **删除笔记**: 移除不再需要的笔记
+- **搜索笔记**: 通过标题和内容快速查找笔记
+- **自动保存**: 输入时自动保存笔记内容
+
+### 🤖 AI 增强功能
+- **智能笔记生成**: 将自然语言输入转换为结构化笔记
+- **日期时间解析**: 自动识别和解析"今天下午5点"等时间表达
+- **标签自动提取**: AI 自动为笔记生成相关标签
+- **多语言翻译**: 支持笔记内容的多语言翻译
+
+### 🎨 用户体验
+- **响应式设计**: 完美适配桌面和移动设备
+- **现代界面**: 美观的渐变设计和流畅动画
+- **实时更新**: 即时反馈和更新
+- **标签管理**: 支持笔记标签和分类
+- **事件管理**: 支持事件日期和时间设置
 
 ## 🚀 Live Demo
 
@@ -19,42 +30,63 @@ The application is deployed and accessible at: **https://3dhkilc88dkk.manus.spac
 
 ## 🛠 Technology Stack
 
-### Frontend
-- **HTML5**: Semantic markup structure
-- **CSS3**: Modern styling with gradients, animations, and responsive design
-- **JavaScript (ES6+)**: Interactive functionality and API communication
+### 前端技术
+- **HTML5**: 语义化标记结构
+- **CSS3**: 现代样式设计，包含渐变、动画和响应式布局
+- **JavaScript (ES6+)**: 交互功能和 API 通信
 
-### Backend
-- **Python Flask**: Web framework for API endpoints
-- **SQLAlchemy**: ORM for database operations
-- **Flask-CORS**: Cross-origin resource sharing support
+### 后端技术
+- **Python Flask**: Web 框架和 API 端点
+- **SQLAlchemy**: ORM 数据库操作
+- **Flask-CORS**: 跨域资源共享支持
+- **Python-dateutil**: 日期时间解析
+- **Requests**: HTTP 客户端库
 
-### Database
-- **SQLite**: Lightweight, file-based database for data persistence
+### 数据库
+- **SQLite**: 轻量级文件数据库 (本地开发)
+- **PostgreSQL**: 生产环境数据库 (Neon/Vercel)
+
+### AI & 集成服务
+- **智谱 AI (GLM-4)**: 自然语言处理和笔记生成
+- **GitHub Models**: 备用 AI 服务
+- **OpenAI API**: 兼容接口
+
+### 部署平台
+- **Vercel**: 无服务器部署平台
+- **Neon**: PostgreSQL 云数据库
 
 ## 📁 Project Structure
 
 ```
 MyNoteTaking/
-├── src/
-│   ├── models/
-│   │   ├── user.py          # User model and database setup
-│   │   └── note.py          # Note model with database schema
-│   ├── routes/
-│   │   ├── user.py          # User API routes (template)
-│   │   ├── note.py          # Note CRUD API endpoints
-│   │   ├── translate.py     # Translation API endpoints
-│   │   └── generate.py      # AI note generation endpoints
-│   ├── static/
-│   │   └── index.html       # Frontend application
-│   ├── call_llm_model.py    # LLM integration for note generation
-│   ├── llm.py              # LLM client configuration
-│   └── main.py              # Flask application entry point
-├── database/
-│   └── app.db               # SQLite database file
-├── .venv/                   # Python virtual environment
-├── requirements.txt         # Python dependencies
-└── README.md               # This file
+├── 📁 api/
+│   └── index.py             # Vercel 部署入口点
+├── 📁 database/
+│   └── app.db               # SQLite 数据库文件 (本地开发)
+├── 📁 src/
+│   ├── 📁 models/
+│   │   ├── user.py          # 用户模型和数据库配置
+│   │   └── note.py          # 笔记模型和数据库结构
+│   ├── 📁 routes/
+│   │   ├── user.py          # 用户 API 路由
+│   │   ├── note.py          # 笔记 CRUD API 端点
+│   │   ├── translate.py     # 翻译 API 端点
+│   │   └── generate.py      # AI 笔记生成端点
+│   ├── 📁 static/
+│   │   ├── index.html       # 前端单页应用
+│   │   └── favicon.ico      # 网站图标
+│   ├── call_llm_model.py    # AI 模型调用和笔记生成
+│   ├── llm.py              # LLM 客户端配置
+│   └── main.py              # Flask 应用入口点
+├── 📁 .venv/                # Python 虚拟环境 (本地)
+├── .env                     # 环境变量配置 (本地, 不提交)
+├── .env.example             # 环境变量示例模板
+├── .env.vercel.example      # Vercel 环境变量示例
+├── .gitignore               # Git 忽略规则
+├── requirements.txt         # Python 依赖列表
+├── vercel.json              # Vercel 部署配置
+├── VERCEL_DEPLOYMENT_GUIDE.md # Vercel 部署指南
+└── README.md               # 项目说明文档
 ```
 
 ## 🔧 Local Development Setup
@@ -68,19 +100,19 @@ MyNoteTaking/
 1. **Clone or download the project**
    Navigate to the project directory in PowerShell or Command Prompt.
 
-2. **Create virtual environment**
+2. **Create virtual environment** (if not already created)
    ```powershell
    python -m venv .venv
    ```
 
 3. **Activate the virtual environment**
    
-   **Windows PowerShell:**
+   **Windows PowerShell (推荐):**
    ```powershell
-   # If execution policy blocks the script, run this first:
-   Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
+   # 如果执行策略阻止脚本运行，请先运行此命令：
+   Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
    
-   # Then activate the environment:
+   # 激活虚拟环境：
    .\.venv\Scripts\Activate.ps1
    ```
    
@@ -94,33 +126,62 @@ MyNoteTaking/
    source .venv/bin/activate
    ```
 
+   **验证激活成功：**
+   激活后，你的命令行提示符前应该出现 `(.venv)` 标识，表示虚拟环境已成功激活。
+
 4. **Install dependencies**
    ```powershell
+   # 确保虚拟环境已激活 (显示 (.venv) 前缀)
+   pip install -r requirements.txt
+   
+   # 或者直接使用虚拟环境的 Python (无需激活)
    .venv\Scripts\python.exe -m pip install -r requirements.txt
    ```
 
-5. **Run the application**
+5. **设置环境变量** (可选)
+   复制 `.env.example` 为 `.env` 并根据需要配置：
    ```powershell
+   copy .env.example .env
+   ```
+   如需使用 AI 功能，请在 `.env` 文件中配置相应的 API 密钥。
+
+6. **Run the application**
+   ```powershell
+   # 方法1: 使用激活的虚拟环境
+   python src\main.py
+   
+   # 方法2: 直接使用虚拟环境的 Python (推荐)
    .venv\Scripts\python.exe src\main.py
    ```
 
-6. **Access the application**
-   - Open your browser and go to `http://localhost:5001`
-   - The application will be running on all network interfaces (0.0.0.0:5001)
+7. **Access the application**
+   - 打开浏览器访问 `http://localhost:5001`
+   - 应用将在所有网络接口上运行 (0.0.0.0:5001)
+   - 首次运行会自动创建数据库表结构
 
-### Quick Start (Windows)
-If you already have the virtual environment set up, you can start the application directly:
+### 快速启动 (已完成初始设置)
+如果你已经完成了虚拟环境设置，可以直接启动应用：
 
 ```powershell
-# Navigate to project directory
-cd D:\workspace\lab2\MyNoteTaking
+# 1. 导航到项目目录
+cd path\to\MyNoteTaking
 
-# Start the application (virtual environment will be used automatically)
+# 2. 启动应用 (推荐方式)
 .venv\Scripts\python.exe src\main.py
+
+# 或者激活虚拟环境后启动
+.\.venv\Scripts\Activate.ps1
+python src\main.py
 ```
 
-### Stopping the Application
-Press `Ctrl+C` in the terminal where the application is running to stop the server.
+### 停止应用
+在运行应用的终端中按 `Ctrl+C` 停止服务器。
+
+### 常见问题解决
+- **端口被占用**: 如果 5001 端口被占用，修改 `src/main.py` 中的端口号
+- **虚拟环境问题**: 确保虚拟环境已正确创建和激活
+- **依赖缺失**: 运行 `pip install -r requirements.txt` 重新安装依赖
+- **数据库问题**: 删除 `database/app.db` 让应用重新创建数据库
 
 ## 📡 API Endpoints
 
