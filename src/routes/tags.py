@@ -1,5 +1,4 @@
 from flask import Blueprint, jsonify
-from collections import Counter
 from src.models.note import Note
 import json
 
@@ -27,15 +26,20 @@ def get_tags_statistics():
                 'most_popular': None
             })
         
-        # 统计标签频次
-        tag_counter = Counter(all_tags)
+        # 统计标签频次 - 手动实现计数
+        tag_counter = {}
+        for tag in all_tags:
+            tag_counter[tag] = tag_counter.get(tag, 0) + 1
+        
+        # 按频次排序
+        sorted_tags = sorted(tag_counter.items(), key=lambda x: x[1], reverse=True)
         
         # 准备返回数据
         tag_counts = []
         max_count = max(tag_counter.values()) if tag_counter else 0
         min_count = min(tag_counter.values()) if tag_counter else 0
         
-        for tag, count in tag_counter.most_common():
+        for tag, count in sorted_tags:
             # 计算标签的权重（相对于最大使用频次）
             weight = count / max_count if max_count > 0 else 1
             
@@ -51,7 +55,7 @@ def get_tags_statistics():
             'tag_counts': tag_counts,
             'total_tags': len(all_tags),  # 总标签数（包括重复）
             'unique_tags': len(tag_counter),  # 唯一标签数
-            'most_popular': tag_counter.most_common(1)[0] if tag_counter else None,
+            'most_popular': sorted_tags[0] if sorted_tags else None,
             'distribution': {
                 'max_count': max_count,
                 'min_count': min_count,
