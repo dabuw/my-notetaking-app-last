@@ -11,27 +11,27 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from src.llm import call_llm_model, DEFAULT_MODEL
 
-# System prompt for extracting structured notes
-system_prompt = '''
+# System prompt template for extracting structured notes
+system_prompt_template = '''
 Extract the user's notes into the following structured fields:
 1. Title: A concise title of the notes less than 5 words
 2. Notes: The notes based on user input written in full sentences.
 3. Tags (A list): At most 3 Keywords or tags that categorize the content of the notes.
-4. Event_Date: If there's a specific date mentioned (like "今天", "明天", "后天", "下周一", "12月15日", "tomorrow", "next Friday"), extract and convert it to YYYY-MM-DD format. Use null if no specific date is found.
+4. Event_Date: If there's a specific date mentioned (like "今天", "明天", "后天", "大后天", "下周一", "12月15日", "tomorrow", "next Friday"), extract and convert it to YYYY-MM-DD format. Use null if no specific date is found.
 5. Event_Time: If there's a specific time mentioned (like "下午5点", "晚上8点", "5pm", "20:00", "8:30"), extract and convert it to HH:MM format (24-hour). Use null if no specific time is found.
 
-Current date context: Today is 2025年10月12日 (October 12th, 2025).
+Current date context: Today is {current_date_cn} ({current_date_en}).
 
 Output in JSON format without ```json. Output title and notes in the language: {lang}.
 
-Example:
+Example (假设今天是{example_today}):
 Input: "今天下午5点去野餐".
 Output:
 {{
 "Title": "今天野餐",
 "Notes": "今天下午5点去野餐。",
 "Tags": ["野餐", "户外活动"],
-"Event_Date": "2025-10-12",
+"Event_Date": "{example_today}",
 "Event_Time": "17:00"
 }}
 
@@ -41,7 +41,7 @@ Output:
 "Title": "项目会议",
 "Notes": "明天上午9点开会讨论项目。", 
 "Tags": ["会议", "项目"],
-"Event_Date": "2025-10-13",
+"Event_Date": "{example_tomorrow}",
 "Event_Time": "09:00"
 }}
 '''
@@ -56,7 +56,7 @@ def parse_date_time_fallback(user_input):
     Returns:
         tuple: (date_str, time_str) in format (YYYY-MM-DD, HH:MM) or (None, None)
     """
-    current_date = date.today()  # 2025-10-12
+    current_date = date.today()  # 自动获取当前日期
     parsed_date = None
     parsed_time = None
     
@@ -124,7 +124,24 @@ def process_user_notes(language, user_input):
     Returns:
         dict: Structured note data with Title, Notes, Tags, Event_Date, Event_Time fields
     """
-    system_prompt_filled = system_prompt.format(lang=language)
+    # 获取当前日期信息
+    current_date = date.today()
+    tomorrow_date = current_date + relativedelta(days=1)
+    
+    # 格式化日期信息
+    current_date_cn = current_date.strftime('%Y年%m月%d日')
+    current_date_en = current_date.strftime('%B %d, %Y')
+    example_today = current_date.strftime('%Y-%m-%d')
+    example_tomorrow = tomorrow_date.strftime('%Y-%m-%d')
+    
+    # 填充系统提示模板
+    system_prompt_filled = system_prompt_template.format(
+        lang=language,
+        current_date_cn=current_date_cn,
+        current_date_en=current_date_en,
+        example_today=example_today,
+        example_tomorrow=example_tomorrow
+    )
     
     messages = [
         {
