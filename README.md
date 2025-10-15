@@ -85,17 +85,13 @@ MyNoteTaking/
 │   ├── call_llm_model.py    # AI 模型调用和笔记生成
 │   ├── llm.py              # LLM 客户端配置
 │   └── main.py              # Flask 应用入口点
-├── 📁 screenshots/          # 项目截图和文档图片
 ├── 📁 .venv/                # Python 虚拟环境 (本地)
-├── create_test_data.py      # 测试数据生成工具
-├── lab2_writeup.md          # 项目技术报告文档
 ├── .env                     # 环境变量配置 (本地, 不提交)
 ├── .env.example             # 环境变量示例模板
 ├── .env.vercel.example      # Vercel 环境变量示例
 ├── .gitignore               # Git 忽略规则
 ├── requirements.txt         # Python 依赖列表
 ├── vercel.json              # Vercel 部署配置
-├── VERCEL_DEPLOYMENT_GUIDE.md # Vercel 部署指南
 ├── VERCEL_DEPLOYMENT_GUIDE.md # Vercel 部署指南
 └── README.md               # 项目说明文档
 ```
@@ -275,82 +271,11 @@ Quick PowerShell tests (run from project root):
 .venv\Scripts\python.exe -c "import sys,json; sys.path.append('src'); from main import app; c=app.test_client(); r=c.post('/api/generate-notes', json={'user_input':'今天下午5点去野餐','language':'Chinese'}); print(r.status_code); print(json.dumps(r.get_json(), ensure_ascii=False, indent=2))"
 ```
 
-## 🏷️ Tag Cloud Feature
-
-The application features an intelligent **Tag Cloud** that provides visual insights into your note organization and enables quick content discovery.
-
-### Visual Tag Statistics
-
-Located in the left sidebar, the tag cloud displays all your note tags with visual emphasis based on usage frequency:
-
-- **Tag Size**: More frequently used tags appear larger
-- **5-Level Sizing**: XS, SM, MD, LG, XL based on relative usage
-- **Real-time Updates**: Automatically refreshes when notes are created, edited, or deleted
-- **Usage Statistics**: Shows total unique tags and usage count
-
-### Interactive Filtering
-
-**Click any tag** to instantly filter your notes:
-
-```
-🏷️ Tag Cloud
-┌─────────────────────────────┐
-│ 工作(5) 学习(3) 技术(4)      │
-│ 生活(2) Python(2) 项目(3)   │
-│ ✕ 已筛选: "工作" (5 notes)   │  ← Filter indicator
-└─────────────────────────────┘
-📊 6 unique tags, 19 total uses
-```
-
-**Smart UX Features**:
-- **Auto-clear Editor**: Clicking a tag clears the editor to avoid confusion
-- **Filter Indicator**: Shows current filter with note count and clear button
-- **Active Highlighting**: Selected tags appear in green gradient
-- **One-click Reset**: Easy "✕ Clear Filter" button to return to all notes
-
-### API Endpoints
-
-**Get Tag Statistics:**
-```bash
-GET /api/tags/statistics
-```
-
-Response example:
-```json
-{
-  "tag_counts": [
-    {"tag": "工作", "count": 5, "weight": 1.0, "percentage": 26.3},
-    {"tag": "学习", "count": 3, "weight": 0.6, "percentage": 15.8}
-  ],
-  "total_tags": 19,
-  "unique_tags": 6,
-  "most_popular": ["工作", 5]
-}
-```
-
-**Search by Tag:**
-```bash
-GET /api/tags/search/工作
-```
-
-### Demo Data Setup
-
-To quickly see the tag cloud in action, run:
-
-```powershell
-# Create sample notes with various tags
-python create_test_data.py
-```
-
-This creates 6 sample notes with different tag combinations to demonstrate the tag cloud functionality.
-
 
 ## 🎨 User Interface Features
 
 ### Sidebar
 - **Search Box**: Real-time search through note titles and content
-- **Tag Cloud**: Interactive visualization of tag usage with filtering
-- **AI Generation**: Natural language to structured notes conversion
 - **New Note Button**: Create new notes instantly
 - **Notes List**: Scrollable list of all notes with previews
 - **Note Previews**: Show title, content preview, and last modified date
@@ -436,19 +361,13 @@ For issues or questions:
 
 Potential improvements for future versions:
 - User authentication and multi-user support
+- Note categories and tags
 - Rich text formatting (bold, italic, lists)
 - File attachments
 - Export functionality (PDF, Markdown)
 - Dark/light theme toggle
 - Offline support with service workers
 - Note sharing capabilities
-
-### Tag Cloud Enhancements
-- **Tag Management**: Edit, merge, and rename tags
-- **Advanced Filtering**: Multi-tag combination filters
-- **Tag Hierarchies**: Parent-child tag relationships  
-- **Tag Analytics**: Usage trends over time
-- **Tag Suggestions**: AI-powered tag recommendations
 
 ---
 
