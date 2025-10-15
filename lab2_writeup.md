@@ -1,12 +1,12 @@
 # Lab 2 项目开发报告：MyNoteTaking 智能笔记应用
 
-## 📋 项目概述
+## 项目概述
 
 本项目开发了一个基于 Flask 的智能笔记管理应用，集成了 GitHub Models AI 服务，支持自然语言输入生成结构化笔记。项目从零开始构建，经历了完整的开发、测试、部署和优化流程。
 
 **项目名称：** MyNoteTaking - Personal Note Management Application  
 **开发时间：** 2025年10月  
-**部署地址：** https://3dhkilc88dkk.manus.space  
+**部署地址：** https://my-notetaking-application-25048609g.vercel.app/  
 **GitHub 仓库：** https://github.com/dabuw/my-notetaking-app-last  
 
 ## 🏗 系统架构
@@ -36,7 +36,7 @@ MyNoteTaking/
 └── vercel.json             # 部署配置
 ```
 
-## 🚀 开发阶段
+## 开发阶段
 
 ### 第一阶段：基础架构搭建
 
@@ -175,7 +175,11 @@ function performSearch() {
 
 **挑战 2：数据库连接配置**
 - 问题：SQLite 在无服务器环境中的限制
-- 解决：集成 Neon PostgreSQL 云数据库
+- - 开始将数据库部署在supabase的的Postgres DB之中，在AI的指导下，我使用了Direct connection，但是项目一直无法连接，我发现是其不支持IPv4，再次询问AI，并没有给我更好的解决办法，而是让我错误的使用SQLite
+- - ![alt text](image.png)
+- - - 此次部署报错
+- - - ![alt text](image-1.png)
+- 解决：最终在搜集资料后将数据库集成在 Neon PostgreSQL 云数据库
 
 #### 4.2 部署配置优化
 ```json
