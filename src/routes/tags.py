@@ -64,17 +64,81 @@ def get_tags_statistics():
     except Exception as e:
         return jsonify({'error': f'Failed to get tag statistics: {str(e)}'}), 500
 
-@tags_bp.route('/api/tags/search/<tag_name>', methods=['GET'])
+@tags_bp.route('/api/tags/search/<path:tag_name>', methods=['GET'])
 def search_notes_by_tag(tag_name):
     """根据标签搜索相关笔记"""
     try:
+        import urllib.parse
+        
+        # 确保正确解码 URL 参数，特别是中文字符
+        # 使用 urllib.parse.unquote 来处理可能的双重编码问题
+        decoded_tag = urllib.parse.unquote(tag_name)
+        
+        # 如果解码后还是 URL 编码格式，再次解码
+        if '%' in decoded_tag:
+            decoded_tag = urllib.parse.unquote(decoded_tag)
+        
+        print(f"[DEBUG] Original tag_name: {tag_name}")
+        print(f"[DEBUG] Decoded tag: {decoded_tag}")
+        
         notes = Note.query.all()
         matching_notes = []
         
         for note in notes:
             tags = note.get_tags()
-            if tags and tag_name.lower() in [t.lower() for t in tags]:
-                matching_notes.append(note.to_dict())
+            if tags:
+                # 支持精确匹配和大小写不敏感匹配
+                for tag in tags:
+                    if (tag.lower() == decoded_tag.lower() or 
+                        tag == decoded_tag or
+                        tag.strip().lower() == decoded_tag.strip().lower()):
+                        matching_notes.append(note.to_dict())
+                        break
+        
+        return jsonify({
+            'tag': decoded_tag,
+            'original_param': tag_name,
+            'count': len(matching_notes),
+            'notes': matching_notes
+        })
+        
+    except Exception as e:
+        print(f"[ERROR] Tag search failed: {str(e)}")
+        return jsonify({
+            'error': f'Failed to search notes by tag: {str(e)}',
+            'tag_param': tag_name,
+            'debug_info': {
+                'error_type': type(e).__name__,
+                'error_message': str(e)
+            }
+        }), 500
+
+@tags_bp.route('/api/tags/search', methods=['POST'])
+def search_notes_by_tag_post():
+    """根据标签搜索相关笔记 (POST 方法，避免 URL 编码问题)"""
+    try:
+        from flask import request
+        
+        data = request.get_json()
+        if not data or 'tag' not in data:
+            return jsonify({'error': 'Missing tag parameter in request body'}), 400
+        
+        tag_name = data['tag']
+        print(f"[DEBUG] POST search for tag: {tag_name}")
+        
+        notes = Note.query.all()
+        matching_notes = []
+        
+        for note in notes:
+            tags = note.get_tags()
+            if tags:
+                # 支持精确匹配和大小写不敏感匹配
+                for tag in tags:
+                    if (tag.lower() == tag_name.lower() or 
+                        tag == tag_name or
+                        tag.strip().lower() == tag_name.strip().lower()):
+                        matching_notes.append(note.to_dict())
+                        break
         
         return jsonify({
             'tag': tag_name,
@@ -83,4 +147,11 @@ def search_notes_by_tag(tag_name):
         })
         
     except Exception as e:
-        return jsonify({'error': f'Failed to search notes by tag: {str(e)}'}), 500
+        print(f"[ERROR] POST tag search failed: {str(e)}")
+        return jsonify({
+            'error': f'Failed to search notes by tag: {str(e)}',
+            'debug_info': {
+                'error_type': type(e).__name__,
+                'error_message': str(e)
+            }
+        }), 500

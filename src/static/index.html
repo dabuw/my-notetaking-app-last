@@ -943,10 +943,40 @@
                 try {
                     this.showMessage(`Searching for notes with tag: ${tagName}`, 'loading');
                     
-                    const response = await fetch(`/api/tags/search/${encodeURIComponent(tagName)}`);
-                    if (!response.ok) throw new Error('Failed to search notes by tag');
+                    let result;
+                    let response;
                     
-                    const result = await response.json();
+                    // 尝试 GET 方法 (原有方式)
+                    try {
+                        // 双重编码以处理 Vercel 环境的编码问题
+                        const encodedTag = encodeURIComponent(tagName);
+                        console.log(`[DEBUG] Trying GET with encoded tag: ${encodedTag}`);
+                        
+                        response = await fetch(`/api/tags/search/${encodedTag}`);
+                        if (!response.ok) {
+                            throw new Error(`GET request failed: ${response.status}`);
+                        }
+                        result = await response.json();
+                        console.log(`[DEBUG] GET request successful:`, result);
+                    } catch (getError) {
+                        console.warn(`[WARN] GET method failed, trying POST:`, getError);
+                        
+                        // 如果 GET 失败，尝试 POST 方法
+                        response = await fetch('/api/tags/search', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ tag: tagName })
+                        });
+                        
+                        if (!response.ok) {
+                            throw new Error(`Both GET and POST methods failed. POST status: ${response.status}`);
+                        }
+                        
+                        result = await response.json();
+                        console.log(`[DEBUG] POST request successful:`, result);
+                    }
                     
                     if (result.notes.length === 0) {
                         this.showMessage(`No notes found with tag "${tagName}"`, 'error');

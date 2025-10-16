@@ -55,6 +55,9 @@ try:
     app.register_blueprint(generate_bp, url_prefix='/api')
     app.register_blueprint(tags_bp)
     
+    # Configure Flask to handle UTF-8 properly in Vercel environment
+    app.config['JSON_AS_ASCII'] = False
+    
     # Create tables
     with app.app_context():
         db.create_all()

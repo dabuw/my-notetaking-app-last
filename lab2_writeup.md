@@ -9,7 +9,7 @@
 **部署地址：** https://my-notetaking-application-25048609g.vercel.app/  
 **GitHub 仓库：** https://github.com/dabuw/my-notetaking-app-last  
 
-## 🏗 系统架构
+## 系统架构
 
 ### 技术栈选择
 - **后端框架：** Flask 3.1.1 - 轻量级、灵活的 Python Web 框架
@@ -162,12 +162,22 @@ function performSearch() {
 }
 ```
 
-## 🚧 部署阶段
+## 部署阶段
 
 ### 第一次部署挑战
 
+由于数据库未能正确设置并且在Environment Variables中错误的直接听取AI建议输入了错误的环境变量，导致在部署过程中直接出现报错
+![alt text](image-3.png)
+
+在之后的修改中，由于过于信任AI，导致被AI注入了过多的无用代码和文件，导致项目在更新多次之后完全无法完成部署任务，旧库地址：https://github.com/dabuw/my-notetaking-app
+![alt text](image-4.png)
+![alt text](image-5.png)
+最后只能选择回滚代码，并创建新库重新进行部署操作
+
+### 第二次部署挑战
+
 #### 4.1 Vercel 无服务器部署配置
-初次部署遇到多个技术挑战：
+重新部署遇到多个技术挑战：
 
 **挑战 1：环境依赖问题**
 - 问题：本地开发环境与 Vercel 运行环境差异
@@ -175,11 +185,12 @@ function performSearch() {
 
 **挑战 2：数据库连接配置**
 - 问题：SQLite 在无服务器环境中的限制
-- - 开始将数据库部署在supabase的的Postgres DB之中，在AI的指导下，我使用了Direct connection，但是项目一直无法连接，我发现是其不支持IPv4，再次询问AI，并没有给我更好的解决办法，而是让我错误的使用SQLite
+- - 开始将数据库部署在supabase的的Postgres DB之中，在AI的指导下，我使用了Direct connection，但是项目一直无法连接，我发现是其不支持IPv4，再次询问AI，并没有给我更好的解决办法，而是让我错误的继续使用SQLite
 - - ![alt text](image.png)
 - - - 此次部署报错
 - - - ![alt text](image-1.png)
 - 解决：最终在搜集资料后将数据库集成在 Neon PostgreSQL 云数据库
+- ![alt text](image-2.png)
 
 #### 4.2 部署配置优化
 ```json
@@ -204,7 +215,7 @@ function performSearch() {
 }
 ```
 
-### 第二次部署优化
+### 第三次部署优化
 
 #### 4.3 错误处理增强
 在 Vercel 环境中添加了全面的错误处理和日志记录：
@@ -360,7 +371,7 @@ async filterByTag(tagName) {
 }
 ```
 
-## 📊 技术成果与指标
+## 技术成果与指标
 
 ### 功能完成度
 - ✅ **基础 CRUD 操作**：100% 完成
@@ -382,7 +393,7 @@ async filterByTag(tagName) {
 - **测试覆盖**：手动测试 100%
 - **错误处理**：全面的异常捕获和用户友好提示
 
-## 🎯 核心挑战与解决方案
+## 核心挑战与解决方案
 
 ### 挑战 1：日期解析准确性
 **问题描述：** "后天"被解析为"明天"  
@@ -418,7 +429,7 @@ async filterByTag(tagName) {
 - 提供一键清除筛选功能
 - 智能状态切换（选择笔记时自动退出筛选）
 
-## 💡 技术收获与经验
+## 技术收获与经验
 
 ### 架构设计经验
 1. **模块化设计**：清晰的目录结构便于维护和扩展
@@ -472,19 +483,23 @@ async filterByTag(tagName) {
 ## 📸 项目截图
 
 ### 主界面
-![主界面截图](screenshots/main-interface.png)
+主界面截图![alt text](image-6.png)
 *响应式设计的主界面，左侧笔记列表，右侧编辑区域*
 
 ### AI 生成功能
-![AI生成功能](screenshots/ai-generation.png)
+AI生成功能![alt text](image-7.png)
 *自然语言输入 "今天下午5点去野餐" 生成结构化笔记*
 
+### tag cloud
+tag cloud 显示
+![alt text](image-10.png)
+
 ### 移动端适配
-![移动端界面](screenshots/mobile-view.png)
+移动端界面![alt text](image-8.png)
 *移动设备上的响应式布局*
 
 ### 部署成功
-![Vercel部署](screenshots/vercel-deployment.png)
+Vercel部署![alt text](image-9.png)
 *Vercel 部署成功界面*
 
 ## 📈 项目统计
