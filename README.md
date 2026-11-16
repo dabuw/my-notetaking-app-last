@@ -1,5 +1,7 @@
 # NoteTaker - Personal Note Management Application
 
+> ⚠️ 这是早期版本，已停止更新。新版见 [my-note-book](https://github.com/dabuw/my-note-book)。
+
 A modern, responsive web application for managing personal notes with a beautiful user interface and full CRUD functionality.
 
 ## 🌟 Features
